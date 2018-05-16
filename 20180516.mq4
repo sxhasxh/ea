@@ -50,7 +50,7 @@ void getNets()
         check[k]=false;
     }
 
-    double botPrice=网格中间价格-网格倍数*网格高度/2*Point;//底部价格
+    double botPrice=网格中间价格-net_quality*网格高度/2*Point;//底部价格
 
     for(int i=0;i<arrayLong;i++)
     {
@@ -116,7 +116,7 @@ void closeFunc()
         {
             if(Ask>OrderOpenPrice()+止盈点数*Point&&OP_BUY == OrderType())
             {
-                if(OrderClose(OrderTicket(),lots,Bid,3,Red))
+                if(OrderClose(OrderTicket(),lots[i],Bid,3,Red))
                 {
                     check[i]=false;
                     orders[i]=-1;
