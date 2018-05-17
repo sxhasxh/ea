@@ -88,15 +88,15 @@ void set_lot_sell()
         {
             lot_sell[j] = 0.02;
         }
-        else if(net[j] >= 1401 && net[j] < 1501))
+        else if(net[j] >= 1401 && net[j] < 1501)
         {
             lot_sell[j] = 0.03;
         }
-        else if(net[j] >= 1501 && net[j] < 1601))
+        else if(net[j] >= 1501 && net[j] < 1601)
         {
             lot_sell[j] = 0.04;
         }
-        else if(net[j] >= 1601 && net[j] < 1701))
+        else if(net[j] >= 1601 && net[j] < 1701)
         {
             lot_sell[j] = 0.05;
         }
