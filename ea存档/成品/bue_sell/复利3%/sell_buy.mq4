@@ -2,13 +2,15 @@ extern double 网格中间价格=1300;
 extern double 网格高度=1000;//网格高度
 extern int net_quality=60;//网格数量
 extern int 止盈点数=5500;//止盈点数
-//extern int 止盈点数=2000;//止盈点数
 extern double 收益比例 =1.03;
 
 double net[300];//300网格的价格
+bool check_buy[300];//300个挂单是否存在，存在为true，不存在FALSE（默认）
 bool check_sell[300];//300个挂单是否存在，存在为true，不存在FALSE（默认）
+double orders_buy[300];//订单号
 double orders_sell[300];//订单号
 double 期望收益     = 0;
+double lot_buy[300];//做多开仓手数
 double lot_sell[300];//做空开仓手数
 int arrayLong=0;//网格数组长度
 
@@ -24,6 +26,7 @@ int init(){
 	期望收益 = AccountBalance() *收益比例;
     for(int i=0;i<arrayLong;i++)
     {
+        orders_buy[i]=-1;
         orders_sell[i]=-1;
     }
     getNets();
@@ -40,6 +43,7 @@ void getNets()
 
     for(int k=0;k<arrayLong;k++)
     {
+        check_buy[k]=false;
         check_sell[k] = false;
     }
 
@@ -49,9 +53,32 @@ void getNets()
     {
         net[i]=botPrice+i*网格高度*Point;//网格每一个价格赋值
     }
+    set_lot_buy(1300);   //设置买入的手数
     set_lot_sell(1300);  //设置卖出的手数
 }
 
+void set_lot_buy(double buy_price)
+{
+    for(int j = 0; j < arrayLong; j++)
+    {
+        if(net[j] < buy_price && net[j] >= buy_price -100)
+        {
+            lot_buy[j] = 0.02;
+        }
+        else if(net[j] < buy_price -100 && net[j] >= buy_price -200)
+        {
+            lot_buy[j] = 0.03;
+        }
+        else if(net[j] < buy_price -200 && net[j] >= buy_price -300)
+        {
+            lot_buy[j] = 0.04;
+        }
+        else
+        {
+            lot_buy[j] = 0.01;
+        }
+    }
+}
 void set_lot_sell(double sell_price)
 {
      for(int j = 0; j < arrayLong; j++)
@@ -80,15 +107,40 @@ void set_lot_sell(double sell_price)
     }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------
-void sendOrder(){
-    for(int i=0;i<arrayLong;i++) //挂空单
+void sendOrder()
+{
+    for(int i=0;i<arrayLong;i++)  //挂多单
     {
-        if(check_sell[i]==false)
+        if(check_buy[i]==false  )
         {
            if( net[i] >= Ask - 51  && net[i] <= Ask + 51)
-           {
+           {    
+               if(net[i]<Ask)
+               {
+                   orders_buy[i]=OrderSend(Symbol(),OP_BUYLIMIT,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
+                   if(orders_buy[i]!=-1)
+                   {
+                       check_buy[i]=true;   
+                   }
+               }
+               else
+               {
+                   orders_buy[i]=OrderSend(Symbol(),OP_BUYSTOP,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
+                   if(orders_buy[i]!=-1)
+                   { 
+                       check_buy[i]=true;
+                   }
+               }
+           }
+        }
+    }
+    for(i=0;i<arrayLong;i++) //挂空单
+    {
+        if(check_sell[i]==false )
+        {
+            if( net[i] >= Ask - 51  && net[i] <= Ask + 51)
+            {
                if(net[i] > Ask)
                {
                    orders_sell[i]=OrderSend(Symbol(),OP_SELLLIMIT,lot_sell[i],net[i],2,0,0,"sell",20180517,0,Green);
@@ -113,7 +165,23 @@ void sendOrder(){
 //------------------------------------------------------------------------------------------------------------------------
 void closeFunc()
 {
-    for(int i=0;i<arrayLong;i++) //平仓空单
+    for(int i=0;i<arrayLong;i++) //平仓多单
+    {
+        OrderSelect(orders_buy[i],SELECT_BY_TICKET);
+
+        if(check_buy[i]==true)
+        {
+            if(Ask>OrderOpenPrice()+止盈点数*Point && OP_BUY == OrderType())
+            {
+                if(OrderClose(OrderTicket(),lot_buy[i],Bid,3,Red))
+                {
+                    check_buy[i]=false;
+                    orders_buy[i]=-1;
+                }
+            }
+        }
+    }
+    for( i=0;i<arrayLong;i++) //平仓空单
     {
         OrderSelect(orders_sell[i],SELECT_BY_TICKET);
 
@@ -151,10 +219,11 @@ void A_Stop()
     {
 		CloseEverything();
 		判断返回值 = False;
-	  //  期望收益 = AccountBalance() *收益比例;
-	  期望收益 = AccountBalance()+ 300;
+	    期望收益 = AccountBalance() *收益比例;
+	//期望收益 = AccountBalance()+300;
 		for(int k=0;k<arrayLong;k++)
 		{
+			check_buy[k]=false;
 			check_sell[k]=false;
 		}
     }

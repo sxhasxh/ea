@@ -53,23 +53,23 @@ void getNets()
     {
         net[i]=botPrice+i*网格高度*Point;//网格每一个价格赋值
     }
-    set_lot_buy();   //设置买入的手数
-    set_lot_sell();  //设置卖出的手数
+    set_lot_buy(1300);   //设置买入的手数
+    set_lot_sell(1300);  //设置卖出的手数
 }
 
-void set_lot_buy()
+void set_lot_buy(double buy_price)
 {
     for(int j = 0; j < arrayLong; j++)
     {
-        if(net[j] < 1299 && net[j] >= 1199)
+        if(net[j] < buy_price && net[j] >= buy_price -100)
         {
             lot_buy[j] = 0.02;
         }
-        else if(net[j] < 1199 && net[j] >= 1099)
+        else if(net[j] < buy_price -100 && net[j] >= buy_price -200)
         {
             lot_buy[j] = 0.03;
         }
-        else if(net[j] < 1099 && net[j] >= 999)
+        else if(net[j] < buy_price -200 && net[j] >= buy_price -300)
         {
             lot_buy[j] = 0.04;
         }
@@ -79,24 +79,24 @@ void set_lot_buy()
         }
     }
 }
-void set_lot_sell()
+void set_lot_sell(double sell_price)
 {
      for(int j = 0; j < arrayLong; j++)
     {
         
-        if(net[j] >= 1301 && net[j] < 1401)
+        if(net[j] >= sell_price && net[j] < sell_price+100)
         {
             lot_sell[j] = 0.02;
         }
-        else if(net[j] >= 1401 && net[j] < 1501)
+        else if(net[j] >= sell_price+100 && net[j] < sell_price+200)
         {
             lot_sell[j] = 0.03;
         }
-        else if(net[j] >= 1501 && net[j] < 1601)
+        else if(net[j] >= sell_price+200 && net[j] < sell_price+300)
         {
             lot_sell[j] = 0.04;
         }
-        else if(net[j] >= 1601 && net[j] < 1701)
+        else if(net[j] >= sell_price+300 && net[j] < sell_price+400)
         {
             lot_sell[j] = 0.05;
         }
@@ -108,49 +108,56 @@ void set_lot_sell()
 }
 
 //------------------------------------------------------------------------------------------------------------------------
-void sendOrder(){
+void sendOrder()
+{
     for(int i=0;i<arrayLong;i++)  //挂多单
     {
-        if(check_buy[i]==false)
+        if(check_buy[i]==false  )
         {
-            if(net[i]<Ask)
-            {
-                orders_buy[i]=OrderSend(Symbol(),OP_BUYLIMIT,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
-                if(orders_buy[i]!=-1)
-                {
-                    check_buy[i]=true;   
-                }
-            }
-            else
-            {
-                orders_buy[i]=OrderSend(Symbol(),OP_BUYSTOP,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
-                if(orders_buy[i]!=-1)
-                { 
-                    check_buy[i]=true;
-                }
-            }
+           if( net[i] >= Ask - 51  && net[i] <= Ask + 51)
+           {    
+               if(net[i]<Ask)
+               {
+                   orders_buy[i]=OrderSend(Symbol(),OP_BUYLIMIT,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
+                   if(orders_buy[i]!=-1)
+                   {
+                       check_buy[i]=true;   
+                   }
+               }
+               else
+               {
+                   orders_buy[i]=OrderSend(Symbol(),OP_BUYSTOP,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
+                   if(orders_buy[i]!=-1)
+                   { 
+                       check_buy[i]=true;
+                   }
+               }
+           }
         }
     }
-    for(int i=0;i<arrayLong;i++) //挂空单
+    for(i=0;i<arrayLong;i++) //挂空单
     {
-        if(check_sell[i]==false)
+        if(check_sell[i]==false )
         {
-            if(net[i] > Ask)
+            if( net[i] >= Ask - 51  && net[i] <= Ask + 51)
             {
-                orders_sell[i]=OrderSend(Symbol(),OP_SELLLIMIT,lot_sell[i],net[i],2,0,0,"sell",20180517,0,Green);
-                if(orders_sell[i]!=-1)
-                {
-                    check_sell[i]=true;   
-                }
-            }
-            else
-            {
-                orders_sell[i]=OrderSend(Symbol(),OP_SELLSTOP,lot_sell[i],net[i],2,0,0,"sell",20180517,0,Green);
-                if(orders_sell[i]!=-1)
-                { 
-                    check_sell[i]=true;
-                }
-            }
+               if(net[i] > Ask)
+               {
+                   orders_sell[i]=OrderSend(Symbol(),OP_SELLLIMIT,lot_sell[i],net[i],2,0,0,"sell",20180517,0,Green);
+                   if(orders_sell[i]!=-1)
+                   {
+                       check_sell[i]=true;   
+                   }
+               }
+               else
+               {
+                   orders_sell[i]=OrderSend(Symbol(),OP_SELLSTOP,lot_sell[i],net[i],2,0,0,"sell",20180517,0,Green);
+                   if(orders_sell[i]!=-1)
+                   { 
+                       check_sell[i]=true;
+                   }
+               }
+           }
         }
     }
 }
@@ -174,7 +181,7 @@ void closeFunc()
             }
         }
     }
-    for(int i=0;i<arrayLong;i++) //平仓空单
+    for( i=0;i<arrayLong;i++) //平仓空单
     {
         OrderSelect(orders_sell[i],SELECT_BY_TICKET);
 
@@ -212,7 +219,8 @@ void A_Stop()
     {
 		CloseEverything();
 		判断返回值 = False;
-	    期望收益 = AccountBalance() *收益比例;
+	//    期望收益 = AccountBalance() *收益比例;
+	期望收益 = AccountBalance()+300;
 		for(int k=0;k<arrayLong;k++)
 		{
 			check_buy[k]=false;

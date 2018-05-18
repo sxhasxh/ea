@@ -1,16 +1,17 @@
-extern double ç½‘æ ¼ä¸­é—´ä»·æ ¼=1300;
-extern double ç½‘æ ¼é«˜åº¦=1000;//ç½‘æ ¼é«˜åº¦
-extern int net_quality=60;//ç½‘æ ¼æ•°é‡
-extern int æ­¢ç›ˆç‚¹æ•°=5500;//æ­¢ç›ˆç‚¹æ•°
-//extern int æ­¢ç›ˆç‚¹æ•°=2000;//æ­¢ç›ˆç‚¹æ•°
-extern double æ”¶ç›Šæ¯”ä¾‹ =1.03;
+extern double Íø¸ñÖĞ¼ä¼Û¸ñ=1300;
+extern double Íø¸ñ¸ß¶È=1000;//Íø¸ñ¸ß¶È
+extern int net_quality=60;//Íø¸ñÊıÁ¿
+extern int Ö¹Ó¯µãÊı=5500;//Ö¹Ó¯µãÊı
+extern double ÊÕÒæ±ÈÀı =1.03;
 
-double net[300];//300ç½‘æ ¼çš„ä»·æ ¼
-bool check_sell[300];//300ä¸ªæŒ‚å•æ˜¯å¦å­˜åœ¨ï¼Œå­˜åœ¨ä¸ºtrueï¼Œä¸å­˜åœ¨FALSEï¼ˆé»˜è®¤ï¼‰
-double orders_sell[300];//è®¢å•å·
-double æœŸæœ›æ”¶ç›Š     = 0;
-double lot_sell[300];//åšç©ºå¼€ä»“æ‰‹æ•°
-int arrayLong=0;//ç½‘æ ¼æ•°ç»„é•¿åº¦
+double net[300];//300Íø¸ñµÄ¼Û¸ñ
+bool check_buy[300];//300¸ö¹Òµ¥ÊÇ·ñ´æÔÚ£¬´æÔÚÎªtrue£¬²»´æÔÚFALSE£¨Ä¬ÈÏ£©
+double orders_buy[300];//¶©µ¥ºÅ
+
+double ÆÚÍûÊÕÒæ     = 0;
+double lot_buy[300];//×ö¶à¿ª²ÖÊÖÊı
+
+int arrayLong=0;//Íø¸ñÊı×é³¤¶È
 
 //------------------------------------------------------------------------------------------------------------------------
 int start() {
@@ -21,10 +22,10 @@ int start() {
 //------------------------------------------------------------------------------------------------------------------------
 int init(){
     arrayLong=net_quality;
-	æœŸæœ›æ”¶ç›Š = AccountBalance() *æ”¶ç›Šæ¯”ä¾‹;
+	ÆÚÍûÊÕÒæ = AccountBalance() *ÊÕÒæ±ÈÀı;
     for(int i=0;i<arrayLong;i++)
     {
-        orders_sell[i]=-1;
+        orders_buy[i]=-1;
     }
     getNets();
     sendOrder();
@@ -35,74 +36,70 @@ void getNets()
 {
     if(arrayLong>300)
     {
-        Print("æŠ¥é”™");
+        Print("±¨´í");
     }
 
     for(int k=0;k<arrayLong;k++)
     {
-        check_sell[k] = false;
+        check_buy[k]=false;
     }
 
-    double botPrice=ç½‘æ ¼ä¸­é—´ä»·æ ¼-net_quality*ç½‘æ ¼é«˜åº¦/2*Point;//åº•éƒ¨ä»·æ ¼
+    double botPrice=Íø¸ñÖĞ¼ä¼Û¸ñ-net_quality*Íø¸ñ¸ß¶È/2*Point;//µ×²¿¼Û¸ñ
 
     for(int i=0;i<arrayLong;i++)
     {
-        net[i]=botPrice+i*ç½‘æ ¼é«˜åº¦*Point;//ç½‘æ ¼æ¯ä¸€ä¸ªä»·æ ¼èµ‹å€¼
+        net[i]=botPrice+i*Íø¸ñ¸ß¶È*Point;//Íø¸ñÃ¿Ò»¸ö¼Û¸ñ¸³Öµ
     }
-    set_lot_sell(1300);  //è®¾ç½®å–å‡ºçš„æ‰‹æ•°
+    set_lot_buy(1300);   //ÉèÖÃÂòÈëµÄÊÖÊı
 }
 
-void set_lot_sell(double sell_price)
+void set_lot_buy(double buy_price)
 {
-     for(int j = 0; j < arrayLong; j++)
+    for(int j = 0; j < arrayLong; j++)
     {
-        
-        if(net[j] >= sell_price && net[j] < sell_price+100)
+        if(net[j] < buy_price && net[j] >= buy_price -100)
         {
-            lot_sell[j] = 0.02;
+            lot_buy[j] = 0.02;
         }
-        else if(net[j] >= sell_price+100 && net[j] < sell_price+200)
+        else if(net[j] < buy_price -100 && net[j] >= buy_price -200)
         {
-            lot_sell[j] = 0.03;
+            lot_buy[j] = 0.03;
         }
-        else if(net[j] >= sell_price+200 && net[j] < sell_price+300)
+        else if(net[j] < buy_price -200 && net[j] >= buy_price -300)
         {
-            lot_sell[j] = 0.04;
-        }
-        else if(net[j] >= sell_price+300 && net[j] < sell_price+400)
-        {
-            lot_sell[j] = 0.05;
+            lot_buy[j] = 0.04;
         }
         else
         {
-            lot_sell[j] = 0.01;
+            lot_buy[j] = 0.01;
         }
     }
 }
 
 
 //------------------------------------------------------------------------------------------------------------------------
-void sendOrder(){
-    for(int i=0;i<arrayLong;i++) //æŒ‚ç©ºå•
+void sendOrder()
+{
+    for(int i=0;i<arrayLong;i++)  //¹Ò¶àµ¥
     {
-        if(check_sell[i]==false)
+        if(check_buy[i]==false  )
         {
            if( net[i] >= Ask - 51  && net[i] <= Ask + 51)
-           {
-               if(net[i] > Ask)
+           {    
+               if(net[i]<Ask)
                {
-                   orders_sell[i]=OrderSend(Symbol(),OP_SELLLIMIT,lot_sell[i],net[i],2,0,0,"sell",20180517,0,Green);
-                   if(orders_sell[i]!=-1)
+                   orders_buy[i]=OrderSend(Symbol(),OP_BUYLIMIT,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
+                   if(orders_buy[i]!=-1)
                    {
-                       check_sell[i]=true;   
+                       check_buy[i]=true;   
                    }
                }
                else
                {
-                   orders_sell[i]=OrderSend(Symbol(),OP_SELLSTOP,lot_sell[i],net[i],2,0,0,"sell",20180517,0,Green);
-                   if(orders_sell[i]!=-1)
+                   orders_buy[i]=OrderSend(Symbol(),OP_BUYSTOP,lot_buy[i],net[i],2,0,0,"buy",20180517,0,Green);
+                   if(orders_buy[i]!=-1)
                    { 
-                       check_sell[i]=true;
+                       check_buy[i]=true;
                    }
                }
            }
@@ -113,18 +110,18 @@ void sendOrder(){
 //------------------------------------------------------------------------------------------------------------------------
 void closeFunc()
 {
-    for(int i=0;i<arrayLong;i++) //å¹³ä»“ç©ºå•
+    for(int i=0;i<arrayLong;i++) //Æ½²Ö¶àµ¥
     {
-        OrderSelect(orders_sell[i],SELECT_BY_TICKET);
+        OrderSelect(orders_buy[i],SELECT_BY_TICKET);
 
-        if(check_sell[i]==true)
+        if(check_buy[i]==true)
         {
-            if(Bid < OrderOpenPrice() - æ­¢ç›ˆç‚¹æ•°*Point && OP_SELL == OrderType())
+            if(Ask>OrderOpenPrice()+Ö¹Ó¯µãÊı*Point && OP_BUY == OrderType())
             {
-                if(OrderClose(OrderTicket(),lot_sell[i],OrderClosePrice(),3,Red))
+                if(OrderClose(OrderTicket(),lot_buy[i],Bid,3,Red))
                 {
-                    check_sell[i]=false;
-                    orders_sell[i]=-1;
+                    check_buy[i]=false;
+                    orders_buy[i]=-1;
                 }
             }
         }
@@ -136,26 +133,26 @@ void closeFunc()
 
 void A_Stop() 
 {
-    bool åˆ¤æ–­è¿”å›å€¼ = FALSE;
-    double è´¦æˆ·å‡€å€¼;
-    if (æœŸæœ›æ”¶ç›Š <= 0.0) return;
+    bool ÅĞ¶Ï·µ»ØÖµ = FALSE;
+    double ÕË»§¾»Öµ;
+    if (ÆÚÍûÊÕÒæ <= 0.0) return;
     if(AccountNumber()== 0||AccountEquity()==0.0||AccountBalance()== 0.0)return;
 
-    è´¦æˆ·å‡€å€¼ = AccountEquity();
-    if (è´¦æˆ·å‡€å€¼ > æœŸæœ›æ”¶ç›Š) 
+    ÕË»§¾»Öµ = AccountEquity();
+    if (ÕË»§¾»Öµ > ÆÚÍûÊÕÒæ) 
     {
-        åˆ¤æ–­è¿”å›å€¼ = TRUE;
+        ÅĞ¶Ï·µ»ØÖµ = TRUE;
     }
  
-    if (åˆ¤æ–­è¿”å›å€¼) 
+    if (ÅĞ¶Ï·µ»ØÖµ) 
     {
 		CloseEverything();
-		åˆ¤æ–­è¿”å›å€¼ = False;
-	  //  æœŸæœ›æ”¶ç›Š = AccountBalance() *æ”¶ç›Šæ¯”ä¾‹;
-	  æœŸæœ›æ”¶ç›Š = AccountBalance()+ 300;
+		ÅĞ¶Ï·µ»ØÖµ = False;
+	//    ÆÚÍûÊÕÒæ = AccountBalance() *ÊÕÒæ±ÈÀı;
+	ÆÚÍûÊÕÒæ = AccountBalance()+300;
 		for(int k=0;k<arrayLong;k++)
 		{
-			check_sell[k]=false;
+			check_buy[k]=false;
 		}
     }
 }
