@@ -246,8 +246,8 @@ sell_tem = 0;
             }
         }
     }
-//    iSetLable("信息栏1","多单已盈利: "+DoubleToString(buy_already_close,5),5,20,10,"Verdana",Red);
-//    iSetLable("信息栏2","空单已盈利: "+DoubleToString(sell_already_close,5),5,40,10,"Verdana",Red);
+    iSetLable("信息栏1","多单已盈利: "+DoubleToString(buy_already_close,5),5,20,10,"Verdana",Red);
+    iSetLable("信息栏2","空单已盈利: "+DoubleToString(sell_already_close,5),5,40,10,"Verdana",Red);
     iSetLable("信息栏3","多单净盈利: "+DoubleToString(buy_tem,5),5,60,10,"Verdana",Red);
     iSetLable("信息栏4","空单净盈利: "+DoubleToString(sell_tem,5),5,80,10,"Verdana",Red);
 //    if(AccountBalance() - AccountEquity()> max_loss)
