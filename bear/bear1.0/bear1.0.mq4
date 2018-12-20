@@ -2,15 +2,19 @@ extern double 网格中间价格=1300;
 extern double 网格高度=1000;//网格高度
 extern int net_quality=60;//网格数量
 extern int 止盈点数=5500;//止盈点数
-extern double 收益百分比 =0.03;
-double net[300];//300网格的价格
-bool check_buy[300];//300个挂单是否存在，存在为true，不存在FALSE（默认）
-bool check_sell[300];//300个挂单是否存在，存在为true，不存在FALSE（默认）
-double orders_buy[300];//订单号
-double orders_sell[300];//订单号
-double 期望收益 = 0;
-double lot_buy[300];//做多开仓手数
-double lot_sell[300];//做空开仓手数
+extern bool 多单开启=true;
+extern bool 空单开启=true;
+
+double net[100];//100网格的价格
+
+bool check_buy[100];//100个挂单是否存在，存在为true，不存在FALSE（默认）
+double orders_buy[100];//订单号
+double lot_buy[100];//做多开仓手数
+
+bool check_sell[100];//100个挂单是否存在，存在为true，不存在FALSE（默认）
+double orders_sell[100];//订单号
+double lot_sell[100];//做空开仓手数
+
 int arrayLong=0;//网格数组长度
 double buy_already_close = 0;
 double buy_tem = 0;
@@ -27,7 +31,6 @@ int start() {
 //------------------------------------------------------------------------------------------------------------------------
 int init(){
     arrayLong=net_quality;
- 期望收益 = AccountBalance() *收益百分比;
     for(int i=0;i<arrayLong;i++)
     {
         orders_buy[i]=-1;
@@ -40,10 +43,6 @@ int init(){
 //------------------------------------------------------------------------------------------------------------------------
 void getNets()
 {
-    if(arrayLong>300)
-    {
-        Print("报错");
-    }
     for(int k=0;k<arrayLong;k++)
     {
         check_buy[k]=false;
@@ -62,26 +61,24 @@ void init_before_run()    //运行程序之前的初始化，比如如果存在�
 {
    int j= 0;
     for(int i=OrdersTotal();i>=0;i--)
-    
-    {
-        
+    { 
       OrderSelect(i, SELECT_BY_POS);                                  
       int Tip=OrderType();                   // 定单类型  
-         if (Tip>1) {OrderDelete( OrderTicket() ); continue;}               // 是挂单,删除  
-         //----------------------------------------------------------------------- 4 --
-        if(OP_BUY == Tip)
-         {
-            for(j = 0;j<arrayLong;j++)
-            {
+      if (Tip>1) {OrderDelete( OrderTicket() ); continue;}               // 是挂单,删除  
+      //----------------------------------------------------------------------- 4 --
+      if(OP_BUY == Tip)
+      {
+           for(j = 0;j<arrayLong;j++)
+           {
                if(net[j] == MathRound(OrderOpenPrice()) &&OrderComment() == "bear")
                {
                   orders_buy[j]= OrderTicket();
                   check_buy[j] = true;    
                }
             }
-         }  
-         if(OP_SELL == Tip)
-         {
+       }  
+       if(OP_SELL == Tip)
+       {
             for(j = 0;j<arrayLong;j++)
             {
                if(net[j] == MathRound(OrderOpenPrice())&&OrderComment() == "bear")
@@ -90,7 +87,7 @@ void init_before_run()    //运行程序之前的初始化，比如如果存在�
                   check_sell[j] = true;    
                }
             }
-         } 
+       } 
          //----------------------------------------------------------------------- 5 --  
                                               // 结束定单分析  
     }             
@@ -147,104 +144,116 @@ void set_lot_sell(double sell_price)
 //------------------------------------------------------------------------------------------------------------------------
 void sendOrder()
 {
-    for(int i=0;i<arrayLong;i++) //挂多单
-    {
-        if(check_buy[i]==false )
-        {
-           if( net[i] >= Ask - 21 && net[i] <= Ask + 21)
+   if(多单开启)
+   {
+       for(int i=0;i<arrayLong;i++) //挂多单
+       {
+           if(check_buy[i]==false )
            {
-               if(net[i]<Ask)
-               {
-                   orders_buy[i]=OrderSend(Symbol(),OP_BUYLIMIT,lot_buy[i],net[i],2,0,0,"bear",20180517,0,Green); 
-                   if(orders_buy[i]!=-1)
-                   {
-                       check_buy[i]=true;
-                   }
-               }
-               else
-               {
-                   orders_buy[i]=OrderSend(Symbol(),OP_BUYSTOP,lot_buy[i],net[i],2,0,0,"bear",20180517,0,Green);
-                   if(orders_buy[i]!=-1)
-                   {
-                       check_buy[i]=true;
-                   }
-               }
-            // iSetLable("信息栏4","多单已盈利: "+DoubleToString(buy_already_close,5),5,80,10,"Verdana",Red);
+              if( net[i] >= Ask - 21 && net[i] <= Ask + 21)
+              {
+                  if(net[i]<Ask)
+                  {
+                      orders_buy[i]=OrderSend(Symbol(),OP_BUYLIMIT,lot_buy[i],net[i],2,0,0,"bear",20180517,0,Green); 
+                      if(orders_buy[i]!=-1)
+                      {
+                          check_buy[i]=true;
+                      }
+                  }
+                  else
+                  {
+                      orders_buy[i]=OrderSend(Symbol(),OP_BUYSTOP,lot_buy[i],net[i],2,0,0,"bear",20180517,0,Green);
+                      if(orders_buy[i]!=-1)
+                      {
+                          check_buy[i]=true;
+                      }
+                  }
+               // iSetLable("信息栏4","多单已盈利: "+DoubleToString(buy_already_close,5),5,80,10,"Verdana",Red);
+              }
            }
-        }
-    }
-    for(i=0;i<arrayLong;i++) //挂空单
-    {
-        if(check_sell[i]==false )
-        {
-            if( net[i] >= Ask - 21 && net[i] <= Ask + 21)
-            {
-               if(net[i] > Ask)
+       }
+   }
+   if(空单开启)
+   {
+       for(i=0;i<arrayLong;i++) //挂空单
+       {
+           if(check_sell[i]==false )
+           {
+               if( net[i] >= Ask - 21 && net[i] <= Ask + 21)
                {
-                   orders_sell[i]=OrderSend(Symbol(),OP_SELLLIMIT,lot_sell[i],net[i],2,0,0,"bear",20180517,0,Green);
-                   if(orders_sell[i]!=-1)
-                   {
-                       check_sell[i]=true;
-                   }
-               }
-               else
-               {
-                   orders_sell[i]=OrderSend(Symbol(),OP_SELLSTOP,lot_sell[i],net[i],2,0,0,"bear",20180517,0,Green);
-                   if(orders_sell[i]!=-1)
-                   {
-                       check_sell[i]=true;
-                   }
-               }
+                  if(net[i] > Ask)
+                  {
+                      orders_sell[i]=OrderSend(Symbol(),OP_SELLLIMIT,lot_sell[i],net[i],2,0,0,"bear",20180517,0,Green);
+                      if(orders_sell[i]!=-1)
+                      {
+                          check_sell[i]=true;
+                      }
+                  }
+                  else
+                  {
+                      orders_sell[i]=OrderSend(Symbol(),OP_SELLSTOP,lot_sell[i],net[i],2,0,0,"bear",20180517,0,Green);
+                      if(orders_sell[i]!=-1)
+                      {
+                          check_sell[i]=true;
+                      }
+                  }
+              }
            }
-        }
-    }
+       }
+   }
 }
 //------------------------------------------------------------------------------------------------------------------------
 void closeFunc()
 {
 buy_tem = 0;
 sell_tem = 0;
-    for(int i=0;i<arrayLong;i++) //平仓多单
-    {
-        OrderSelect(orders_buy[i],SELECT_BY_TICKET);
-        if(check_buy[i]==true)
-        {
-            if(Ask>OrderOpenPrice()+止盈点数*Point && OP_BUY == OrderType())
-            {
-                if(OrderClose(OrderTicket(),OrderLots(),OrderClosePrice(),3,Red))
-                {
-                    check_buy[i]=false;
-                    orders_buy[i]=-1;
-                }
-                buy_already_close = OrderProfit() + buy_already_close;
-   //             Print("余额：",AccountBalance(),"净值：",AccountEquity());
-            }
-            else
-            {
-               buy_tem = OrderProfit() + buy_tem;
-            }
-        }
+   if(多单开启)
+   {
+       for(int i=0;i<arrayLong;i++) //平仓多单
+       {
+           OrderSelect(orders_buy[i],SELECT_BY_TICKET);
+           if(check_buy[i]==true)
+           {
+               if(Ask>OrderOpenPrice()+止盈点数*Point && OP_BUY == OrderType())
+               {
+                   if(OrderClose(OrderTicket(),OrderLots(),OrderClosePrice(),3,Red))
+                   {
+                       check_buy[i]=false;
+                       orders_buy[i]=-1;
+                   }
+                   buy_already_close = OrderProfit() + buy_already_close;
+      //             Print("余额：",AccountBalance(),"净值：",AccountEquity());
+               }
+               else
+               {
+                  buy_tem = OrderProfit() + buy_tem;
+               }
+           }
+       }
     }
-    for( i=0;i<arrayLong;i++) //平仓空单
+    if(空单开启)
     {
-        OrderSelect(orders_sell[i],SELECT_BY_TICKET);
-        if(check_sell[i]==true)
-        {
-            if(Bid < OrderOpenPrice() - 止盈点数*Point && OP_SELL == OrderType())
-            {
-                if(OrderClose(OrderTicket(),OrderLots(),OrderClosePrice(),3,Red))
-                {
-                    check_sell[i]=false;
-                    orders_sell[i]=-1;
-                }
-                sell_already_close = OrderProfit() + sell_already_close;
-           //     Print("余额：",AccountBalance(),"净值：",AccountEquity());
-            }
-            else
-            {
-               sell_tem = OrderProfit() + sell_tem;
-            }
-        }
+       for( i=0;i<arrayLong;i++) //平仓空单
+       {
+           OrderSelect(orders_sell[i],SELECT_BY_TICKET);
+           if(check_sell[i]==true)
+           {
+               if(Bid < OrderOpenPrice() - 止盈点数*Point && OP_SELL == OrderType())
+               {
+                   if(OrderClose(OrderTicket(),OrderLots(),OrderClosePrice(),3,Red))
+                   {
+                       check_sell[i]=false;
+                       orders_sell[i]=-1;
+                   }
+                   sell_already_close = OrderProfit() + sell_already_close;
+              //     Print("余额：",AccountBalance(),"净值：",AccountEquity());
+               }
+               else
+               {
+                  sell_tem = OrderProfit() + sell_tem;
+               }
+           }
+       }
     }
     iSetLable("信息栏1","多单已盈利: "+DoubleToString(buy_already_close,5),5,20,10,"Verdana",Red);
     iSetLable("信息栏2","空单已盈利: "+DoubleToString(sell_already_close,5),5,40,10,"Verdana",Red);
